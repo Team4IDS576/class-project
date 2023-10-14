@@ -95,6 +95,11 @@ class roadnet:
         for edge in edges:
             self.add_edge(edge) # for list of edges call add_edge() method
 
+    def pop_edge(self, id: int):
+        edge_to_remove = self.get_edge(id)
+        if edge_to_remove is not None:
+            self.edges.remove(edge_to_remove)
+
     def get_edge(self, id: int):
         for edge in self.edges:
             if id == edge.id:
@@ -122,6 +127,9 @@ class roadnet:
         for node in self.nodes:
             for edge in self.edges:
                 node.add_edge(edge)
+    
+    def rebuild(self):
+        pass
 
     def edge_states(self):
         '''
