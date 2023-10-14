@@ -3,6 +3,9 @@ import numpy as np
 
 class edge:
     def __init__(self, id: int, v1: tuple, v2: tuple, speed_limit: int):
+        """
+        This functinon initializes a segment in the roadway network
+        """
         
         # initialized attributes
         self.id = id # int id of edge
@@ -11,15 +14,15 @@ class edge:
         self.speed_limit = speed_limit # speed limit of segment
         
         # calculated attributes
-        self.length = self._calc_length() # length of segment in feet
-        self.angle = self._calc_angle() # angle of segment in degrees
-    
-    def _calc_length(self):
-        return euclidean(self.v1, self.v2)
-    
-    def _calc_angle (self):
-        direction_vector = self.v2 - self.v1 # calculate the direction of the segment
+        self.length = euclidean(self.v1, self.v2) # length of segment in feet
+        self.direction = self.v2 - self.v1 # get direction of the road
+        self.angle = np.arctan2(self.direction[0], self.direction[1]) # angle of segment in radians
+        self.angle_degrees = np.degrees(self.angle)
+        self.unit_vector = self.direction / self.length
         
-        # return arctan2 of direction vector
-        return np.degrees(np.arctan2(direction_vector[0], direction_vector[1]))
-        
+        # road properties
+        '''
+        These attributes are related to the modeling of traffic flow
+        '''
+        self.d1 = self.unit_vector # unit step in the direcition of v1
+        self.d2 = -1 * self.unit_vector # unit step in the direction of v2
