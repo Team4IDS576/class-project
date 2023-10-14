@@ -1,4 +1,4 @@
-from scipy.spatial.distance import euclidean, cosine
+from scipy.spatial.distance import euclidean
 import numpy as np
 import matplotlib.pyplot as plt
 
