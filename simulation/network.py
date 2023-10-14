@@ -1,6 +1,6 @@
 from scipy.spatial.distance import euclidean, cosine
 import numpy as np
-import pandas as pd
+import matplotlib.pyplot as plt
 
 class edge:
     '''
@@ -82,13 +82,12 @@ class roadnet:
     begin by instantiating a roadnet object, add nodes and edges or list of nodes and edges
     
     use the build() method to connect edges to nodes
-    
-    
     '''
     def __init__(self):
         self.edges = [] # list of edges
         self.nodes = [] # list of nodes
 
+    # edge methods
     def add_edge(self, edge: edge):
         self.edges.append(edge) # append to edges instance variable
 
@@ -101,7 +100,8 @@ class roadnet:
             if id == edge.id:
                 return edge
         return None # return None if not in edges
-            
+
+    # node methods
     def add_node(self, node):
         self.nodes.append(node)
 
@@ -114,3 +114,66 @@ class roadnet:
             if id == node.id:
                 return node
         return None # return None if not in nodes
+
+    def build(self):
+        '''
+        This method "builds" the network. Attaches edges to nodes.
+        '''
+        for node in self.nodes:
+            for edge in self.edges:
+                node.add_edge(edge)
+
+    def edge_states(self):
+        '''
+        this method returns an array like object representing the geometry of the roadnet
+        '''
+        
+        edge_states = []
+        
+        for edge in self.edges:
+            edge_state = [edge.id, edge.v1[0], edge.v1[1], edge.v2[0], edge.v2[1], edge.length]
+            edge_states.append(edge_state)
+
+        return edge_states
+
+
+    def edge_states_summary(self):
+        '''
+        This method returns a summary of the edges of the network
+        '''
+        # edge labels
+        labels = [
+            "id",
+            "start_x",
+            "start_y",
+            "end_x",
+            "end_y",
+            "length"
+        ]
+
+        print("\t".join(labels))
+        for sub_state in self.edge_states():
+            print("\t".join([str(sub) for sub in sub_state]))
+
+    def node_states_summary(self):
+        # node labels
+        labels = [
+            "node id",
+            "location",
+            "connected_edges"
+        ]
+        
+        print("\t".join(labels))
+        for node in self.nodes:
+            print("\t".join([str(node.id), str(tuple(node.location)), str(len(node.edge_ids))]))
+
+    def wireframe(self):
+        fig, ax = plt.subplots(figsize = (10,10))
+        
+        for segment in self.edge_states():
+            id, start_x, start_y, end_x, end_y, _ = segment
+            
+            ax.plot([start_x, end_x], [start_y, end_y], marker = "o", linestyle="-", label = id)
+        ax.legend()
+
+    plt.show()
