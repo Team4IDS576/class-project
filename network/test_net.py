@@ -44,3 +44,5 @@ if __name__ == "__main__":
     nx.draw(network, pos, with_labels=True)
     plt.axis('off')
     plt.show()
+    
+    # this is a testj
