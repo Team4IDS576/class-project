@@ -5,8 +5,6 @@ import sys
 
 from gymnasium.spaces import Discrete
 
-sys.path.append("../network")
-
 from test_net import test_net
 
 

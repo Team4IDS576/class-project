@@ -23,7 +23,8 @@ def test_net():
         ("A", "B", {"length": 2, "congestion": 2}),
         ("B", "D", {"length": 2, "congestion": 2}),
         ("A", "C", {"length": 2, "congestion": 2}),
-        ("C", "D", {"length": 2, "congestion": 2})
+        ("C", "D", {"length": 2, "congestion": 2}),
+        ("A", "D", {"length": 2, "congestion": 2})
     ]
 
     # add roads
