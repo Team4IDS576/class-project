@@ -2,7 +2,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 # Read the CSV file into a DataFrame
-links = pd.read_csv("NguyenLinks.csv")
+data_types = {"start node": str, "end node": str} # node names should be str
+links = pd.read_csv("NguyenLinks.csv", index_col= 0, dtype=data_types)
 
 def nguyenNetwork(links=links):
     
@@ -14,7 +15,7 @@ def nguyenNetwork(links=links):
         "1": {"pos": (1, 3)},
         "2": {"pos": (4, 1)},
         "3": {"pos": (3, 0)},
-        "4": {"pos": (0, 1)},
+        "4": {"pos": (0, 2)},
         "5": {"pos": (1, 2)},
         "6": {"pos": (2, 2)},
         "7": {"pos": (3, 2)},
