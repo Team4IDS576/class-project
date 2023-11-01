@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 # Read the CSV file into a DataFrame
 data_types = {"start node": str, "end node": str} # node names should be str
-links = pd.read_csv("NguyenLinks.csv", index_col= 0, dtype=data_types)
+links = pd.read_csv("NguyenLinks.csv", dtype=data_types)
+
 
 def nguyenNetwork(links=links):
     
@@ -37,7 +38,9 @@ def nguyenNetwork(links=links):
     roads = [(row["start node"], 
               row["end node"], 
               {"ffs": row["free flow speed"], 
-               "capacity": row["capacity"]}) for _, row in links.iterrows()]
+               "capacity": row["capacity"],
+               "alpha": row["alpha"],
+               "beta": row["beta"]}) for _, row in links.iterrows()]
 
     # Print the list of roads
     print(roads)
@@ -47,6 +50,19 @@ def nguyenNetwork(links=links):
     network.add_edges_from(roads)
     
     return network
+
+
+
+def latency(flow, link):
+    # flow takes the total No. of vehicle in the link
+    # link takes the # of the link ("No" dolumn in the CSV file of the network)
+    c = links[links['No'] == link]['capacity']
+    t_0 = links[links['No'] == link]['free flow speed']
+    a = links[links['No'] == link]['alpha']
+    b = links[links['No'] == link]['beta']
+    t_link = t_0 * (1 + (a * ((flow/c) ** b)))
+    return t_link
+
 
 if __name__ == "__main__":
     
