@@ -154,3 +154,15 @@ class raw_env(AECEnv):
             self.agent_selection = self._agent_selector.next()
             
             return self.observe(self.agent_selection), reward, self.terminations[agent], {}
+
+    def reset(self):
+        # reset to initial states
+        self.agent_locations = self.agent_origins.copy()
+        self.rewards = {agent: 0 for agent in self.agents}
+        self.terminations = {agent: False for agent in self.agents}
+        
+        # we will also need to reset the network - to be added
+
+        # return initial observations for each agent
+        initial_observations = {agent: self.observe(agent) for agent in self.agents}
+        return initial_observations
