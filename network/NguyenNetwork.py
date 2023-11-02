@@ -1,12 +1,8 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
-# Read the CSV file into a DataFrame
-data_types = {"start node": str, "end node": str} # node names should be str
-links = pd.read_csv("./network/NguyenLinks.csv", dtype=data_types)
-demand = pd.read_csv("./network/NguyenDemand.csv")
 
-def nguyenNetwork(links=links):
+def nguyenNetwork(links):
     
     # instantiate null directed graph
     network = nx.DiGraph()
@@ -54,7 +50,7 @@ def nguyenNetwork(links=links):
 
 
 
-def latency(flow, link):
+def latency(flow, links, link):
     
     # 'flow' takes the total No. of vehicle in the link
     # 'link' takes the # of the link ("No" column in the CSV file of the network)
@@ -68,13 +64,13 @@ def latency(flow, link):
     return t_link
 
 
-def traffic(df = demand):
+def traffic(demand):
     agents = []
     origins = []
     destinations = []
     agent_no = 0
 
-    for index, row in df.iterrows():
+    for index, row in demand.iterrows():
         origin = str(row['Origin'])
         destination = str(row['Destination'])
         count = int(row['OD demand'])
@@ -95,9 +91,19 @@ def traffic(df = demand):
 
 
 if __name__ == "__main__":
-    
+    # Read the CSV file into a DataFrame
+    data_types = {"start node": str, "end node": str} # node names should be str
+
+    # for mac OS
+    # links = pd.read_csv("./network/NguyenLinks.csv", dtype=data_types)
+    # demand = pd.read_csv("./network/NguyenDemand.csv")
+
+    # for windows
+    links = pd.read_csv("NguyenLinks.csv", dtype=data_types)
+    demand = pd.read_csv("NguyenDemand.csv")
+
     # load test net
-    network = nguyenNetwork()
+    network = nguyenNetwork(links=links)
     
     # get position of nodes
     pos = nx.get_node_attributes(network, "pos")
@@ -108,7 +114,6 @@ if __name__ == "__main__":
     plt.axis('off')
     plt.show()
 
-    
     # Example usage
     result = traffic(demand)
     print(result)
