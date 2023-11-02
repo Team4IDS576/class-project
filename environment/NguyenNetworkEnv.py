@@ -18,14 +18,14 @@ from pettingzoo.utils import agent_selector, wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
 # network imports
-import sys
-import networkx as nx
-sys.path.append("../network/")
-from NguyenNetwork import nguyenNetwork, latency
+# import sys
+# import networkx as nx
+# sys.path.append("../network/")
+# from NguyenNetwork import nguyenNetwork, latency
 
 
 # traffic imports
-sys.path.append("../traffic")
+# sys.path.append("../traffic")
 
 # allows to import the parallel environment using "from NguyenNetworkEnv import parallel_env"
 __all__ = ["parallel_env"]
