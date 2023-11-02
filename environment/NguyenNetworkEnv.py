@@ -17,6 +17,23 @@ from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
+'''
+# sadjad:
+sys.path.append("../network")
+from NguyenNetwork import nguyenNetwork, latency, traffic
+
+# Read the CSV file into a DataFrame
+data_types = {"start node": str, "end node": str} # node names should be str
+
+# for mac OS
+# links = pd.read_csv("../network/NguyenLinks.csv", dtype=data_types)
+# demand = pd.read_csv("../network/NguyenDemand.csv")
+
+# for windows
+links = pd.read_csv("..\\network\\NguyenDemand.csv", dtype=data_types)
+demand = pd.read_csv("..\\network\\NguyenDemand.csv")
+'''
+
 # network imports
 # import sys
 # import networkx as nx
