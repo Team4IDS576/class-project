@@ -17,28 +17,15 @@ from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
-'''
-# sadjad:
-sys.path.append("../network")
-from NguyenNetwork import nguyenNetwork, latency, traffic
-
-# Read the CSV file into a DataFrame
-data_types = {"start node": str, "end node": str} # node names should be str
-
-# for mac OS
-# links = pd.read_csv("../network/NguyenLinks.csv", dtype=data_types)
-# demand = pd.read_csv("../network/NguyenDemand.csv")
-
-# for windows
-links = pd.read_csv("..\\network\\NguyenDemand.csv", dtype=data_types)
-demand = pd.read_csv("..\\network\\NguyenDemand.csv")
-'''
-
 # network imports
 # import sys
 # import networkx as nx
 # sys.path.append("../network/")
 # from NguyenNetwork import nguyenNetwork, latency
+
+from NguyenNetwork import nguyenNetwork, traffic
+network = nguyenNetwork()
+traffic = traffic()
 
 
 # traffic imports
@@ -48,14 +35,15 @@ demand = pd.read_csv("..\\network\\NguyenDemand.csv")
 __all__ = ["parallel_env"]
 
 def env(**kwargs):
-    env = raw_env(**kwargs)
+    env = raw_env(network, traffic)
     return env
 
 parallel_env = parallel_wrapper_fn(env)
 
 class raw_env(AECEnv):
     metadata = {
-        "name": "NguyenNet"
+        "name": "NguyenNet",
+        "is_parallelizable": True
     }
     
     # initialize environment with the Nguyen Network and Traffic Demand from agents
@@ -85,7 +73,7 @@ class raw_env(AECEnv):
             # dict of agents and there observation spaces - at most 4 corresponding to two possible choices and there latencies
             zip(
                 self.agents,
-                gymnasium.spaces.Discrete(4)
+                [gymnasium.spaces.Discrete(4)]*len(self.agents)
             )
         )
         
@@ -94,12 +82,12 @@ class raw_env(AECEnv):
             # with the nguyen network agents have at 2 nodes to travel to
             zip(
                 self.agents,
-                gymnasium .spaces.Discrete(2)
+                [gymnasium.spaces.Discrete(2)]*len(self.agents)
             )
         }
         
         # current agent
-        self.agent_selector.reinit(self.agents)
+        self._agent_selector.reinit(self.agents)
         self.agent_selection = self._agent_selector.next()
         
         # agent terminal and truncated state
