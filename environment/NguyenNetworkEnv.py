@@ -8,6 +8,7 @@ While this is a parallel environment the raw env is actually an AEC env with a p
 
 # gymnasium imports
 import gymnasium
+import gymnasium.spaces
 import numpy as np
 from gymnasium.utils import EzPickle
 
@@ -44,11 +45,8 @@ class raw_env(AECEnv):
         '''
         net:
         '''
-        
-        dict(
-            ("agents", ["agent_1"]),
-            ("")
-        )
+        # initialize network
+        self.road_network = net
         
         # initialize agents, orgins, current positions, and destinations
         self.agents = traffic["agents"] # list of agents in environment
@@ -69,14 +67,29 @@ class raw_env(AECEnv):
             # dict of agents and there observation spaces - at most 4 corresponding to two possible choices and there latencies
             zip(
                 self.agents,
-                gymnasium.spaces.Discrete(2)
+                gymnasium.spaces.Discrete(4)
             )
         )
         
         # agent action space
         self.action_spaces = {
+            # with the nguyen network agents have at 2 nodes to travel to
             zip(
                 self.agents,
                 gymnasium .spaces.Discrete(2)
             )
         }
+        
+        # agent terminal and truncated state
+        self.terminate = {agent: False for agent in self.agents}
+        self.truncate = {agent: False for agent in self.agents}
+        
+    def observation_space(self, agent):
+        return self.observation_spaces[agent]
+    
+    def action_space(self, agent):
+        return self.action_spaces[agent]
+    
+    def observe(self, agent):
+        
+    
