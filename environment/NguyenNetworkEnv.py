@@ -23,6 +23,7 @@ sys.path.append("../network/")
 from NguyenNetwork import nguyenNetwork, latency
 
 # traffic imports
+sys.path.append("../traffic")
 
 # allows to import the parallel environment using "from NguyenNetworkEnv import parallel_env"
 __all__ = ["parallel_env"]
@@ -50,8 +51,23 @@ class raw_env(AECEnv):
         self.agent_name_mapping = dict(zip(self.agents, list(range(len(self.agents))))) # map list of agents to int id starting at 0
         self._agent_selector = agent_selector(self.agents)
         
-        # agent location infomration
+        # agent travel information
         self.agent_origins = traffic["origins"]
         self.agent_locations = traffic["origins"]
         self.agent_destinations = traffic["destinations"]
+        
+        # agent latency initialized at zero
+        self.agent_latency = 
+        
+        
+        # agent observation space
+        self.observation_spaces = dict(
+            # dict of agents and there observable space
+            zip(
+                self.agents,
+                gymnasium.spaces.Discrete(2)
+            )
+        )
+        
+        
         
