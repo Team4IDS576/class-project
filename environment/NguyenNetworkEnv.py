@@ -120,16 +120,37 @@ class raw_env(AECEnv):
         pass
     
     def step(self, action):
+        # agent is dead pass
         if (self.terminations[self.agent_selection]
             or self.truncations[self.agent_selection]
             ):
             return
         
+        # need to add logic to update network
+        
+        # select agent
         agent = self.agent_selection
-        action = np.asarray(action)
         
         if self.agent_wait_time[self.agent_selection] != 0:
+            # if agent has waiting time (i.e. "traveling" along edge, decrement wait time by one time step)
             self.agent_wait_time[self.agent_selection] -= 1
             return
         else:
+            # select node to move to from list of available nodes
+            chosen_route = list(self.road_network.neighbors(self.agent_locations[agent]))[action]
             
+            # reward based on chosen route latency, again using ffs instead of calculated latency, need a _calculate_reward(agent) method for this
+            reward = self.road_network.get_edge_data(self.agent_locations[agent], chosen_route)["ffs"]
+            self.rewards[agent] += reward
+            
+            # update agent position
+            self.agent_locations[agent] = chosen_route
+            
+            # kill agent if reached destination
+            if chosen_route == self.agent_destinations[agent]:
+                self.terminations[agent] == True
+            
+            # set the next agent to act
+            self.agent_selection = self._agent_selector.next()
+            
+            return self.observe(self.agent_selection), reward, self.terminations[agent], {}
