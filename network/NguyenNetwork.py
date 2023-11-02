@@ -4,6 +4,7 @@ import pandas as pd
 # Read the CSV file into a DataFrame
 data_types = {"start node": str, "end node": str} # node names should be str
 links = pd.read_csv("NguyenLinks.csv", dtype=data_types)
+demand = pd.read_csv("NguyenDemand.csv")
 
 
 def nguyenNetwork(links=links):
@@ -40,10 +41,11 @@ def nguyenNetwork(links=links):
               {"ffs": row["free flow speed"], 
                "capacity": row["capacity"],
                "alpha": row["alpha"],
-               "beta": row["beta"]}) for _, row in links.iterrows()]
+               "beta": row["beta"],
+               "latency": row["latency"]}) for _, row in links.iterrows()]
 
     # Print the list of roads
-    print(roads)
+    # print(roads)
 
 
     # add roads
@@ -54,14 +56,43 @@ def nguyenNetwork(links=links):
 
 
 def latency(flow, link):
-    # flow takes the total No. of vehicle in the link
-    # link takes the # of the link ("No" dolumn in the CSV file of the network)
+    
+    # 'flow' takes the total No. of vehicle in the link
+    # 'link' takes the # of the link ("No" column in the CSV file of the network)
+    # This function assumes that the travel time of the links are BPR functions.
+    # for more information about BPR functions read p#358 of Sheffi's book.
     c = links[links['No'] == link]['capacity']
     t_0 = links[links['No'] == link]['free flow speed']
     a = links[links['No'] == link]['alpha']
     b = links[links['No'] == link]['beta']
     t_link = t_0 * (1 + (a * ((flow/c) ** b)))
     return t_link
+
+
+def traffic(df = demand):
+    agents = []
+    origins = []
+    destinations = []
+    agent_no = 0
+
+    for index, row in df.iterrows():
+        origin = str(row['Origin'])
+        destination = str(row['Destination'])
+        count = int(row['OD demand'])
+        for i in range(count):
+            agent_no += 1
+            agents.append(f'agent_{agent_no}')
+            origins.append(origin)
+            destinations.append(destination)
+
+    traffic = {
+        "agents": agents,
+        "origins": origins,
+        "destinations": destinations
+    }
+
+    return traffic
+
 
 
 if __name__ == "__main__":
@@ -77,3 +108,8 @@ if __name__ == "__main__":
     nx.draw(network, pos, with_labels=True)
     plt.axis('off')
     plt.show()
+
+    
+    # Example usage
+    result = traffic(demand)
+    print(result)
