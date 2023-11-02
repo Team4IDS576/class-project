@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 # Read the CSV file into a DataFrame
 data_types = {"start node": str, "end node": str} # node names should be str
-links = pd.read_csv("NguyenLinks.csv", dtype=data_types)
+links = pd.read_csv("./network/NguyenLinks.csv", dtype=data_types)
 
 
 def nguyenNetwork(links=links):
