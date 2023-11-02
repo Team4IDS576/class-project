@@ -45,6 +45,11 @@ class raw_env(AECEnv):
         net:
         '''
         
+        dict(
+            ("agents", ["agent_1"]),
+            ("")
+        )
+        
         # initialize agents, orgins, current positions, and destinations
         self.agents = traffic["agents"] # list of agents in environment
         self.possible_agents = self.agents[:]
@@ -57,17 +62,21 @@ class raw_env(AECEnv):
         self.agent_destinations = traffic["destinations"]
         
         # agent latency initialized at zero
-        self.agent_latency = 
-        
+        self.agent_latency = {agent: 0 for agent in self.agents}
         
         # agent observation space
         self.observation_spaces = dict(
-            # dict of agents and there observable space
+            # dict of agents and there observation spaces - at most 4 corresponding to two possible choices and there latencies
             zip(
                 self.agents,
                 gymnasium.spaces.Discrete(2)
             )
         )
         
-        
-        
+        # agent action space
+        self.action_spaces = {
+            zip(
+                self.agents,
+                gymnasium .spaces.Discrete(2)
+            )
+        }
