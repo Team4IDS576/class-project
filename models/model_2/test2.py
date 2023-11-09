@@ -1,9 +1,8 @@
 from RoadNetEnv import raw_env
-from NguyenNetwork import nguyenNetwork
+from NguyenNetwork import nguyenNetwork, traffic
 
-test = nguyenNetwork()
-
-neighbor_nodes = test.neighbors("1")
-
-for i in neighbor_nodes:
-    print(type(i))
+try:
+    test = raw_env()
+    # Further actions with the test object
+except Exception as e:
+    print(f"An error occurred: {e}")

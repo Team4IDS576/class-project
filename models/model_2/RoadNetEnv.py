@@ -70,13 +70,13 @@ class raw_env(AECEnv):
         )
         
         # agent action space
-        self.action_spaces = {
+        self.action_spaces = dict(
             # with the nguyen network agents have at 2 nodes to travel to
             zip(
                 self.agents,
                 [gymnasium .spaces.Discrete(2)]*len(self.agents)
             )
-        }
+        )
         
         # current agent
         self._agent_selector.reinit(self.agents)
@@ -88,6 +88,7 @@ class raw_env(AECEnv):
         
         # agent rewards
         self.rewards = {agent: 0 for agent in self.agents}
+        self._cumulative_rewards = dict(zip(self.agents, [0 for _ in self.agents]))
         
     def observation_space(self, agent):
         return self.observation_spaces[agent]
@@ -134,14 +135,14 @@ class raw_env(AECEnv):
             return
         else:
             # select node to move to from list of available nodes
-            chosen_route = list(self.road_network.neighbors(self.agent_locations[agent]))[action]
+            chosen_route = list(self.road_network.neighbors(self.agent_locations[self.agent_name_mapping[agent]]))[action]
             
             # reward based on chosen route latency, again using ffs instead of calculated latency, need a _calculate_reward(agent) method for this
-            reward = self.road_network.get_edge_data(self.agent_locations[agent], chosen_route)["ffs"]
+            reward = self.road_network.get_edge_data(self.agent_locations[self.agent_name_mapping[agent]], chosen_route)["ffs"]
             self.rewards[agent] += reward
             
             # update agent position
-            self.agent_locations[agent] = chosen_route
+            self.agent_locations[self.agent_name_mapping[agent]] = chosen_route
             
             # kill agent if reached destination
             if chosen_route == self.agent_destinations[agent]:
