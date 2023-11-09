@@ -74,7 +74,7 @@ class raw_env(AECEnv):
             # with the nguyen network agents have at 2 nodes to travel to
             zip(
                 self.agents,
-                [gymnasium .spaces.Discrete(2)]*len(self.agents)
+                [gymnasium.spaces.Discrete(2)]*len(self.agents)
             )
         )
         
@@ -129,24 +129,43 @@ class raw_env(AECEnv):
         # select agent
         agent = self.agent_selection
         
-        if self.agent_wait_time[self.agent_selection] != 0:
+        if self.agent_wait_time[agent] != 0:
+            print(f"{agent} is waiting!")
             # if agent has waiting time (i.e. "traveling" along edge, decrement wait time by one time step)
-            self.agent_wait_time[self.agent_selection] -= 1
+            self.agent_wait_time[agent] -= 1
+            self.agent_selection = self._agent_selector.next()
             return
         else:
             # select node to move to from list of available nodes
-            chosen_route = list(self.road_network.neighbors(self.agent_locations[self.agent_name_mapping[agent]]))[action]
+            
+            print(agent)
+            print(self.agent_locations[self.agent_name_mapping[agent]])
+            
+            choices = list(self.road_network.neighbors(self.agent_locations[self.agent_name_mapping[agent]]))
+            
+            # if only one action
+            if len(choices) == 1:
+                print(choices)
+                chosen_route = [choices[0], choices[0]][action]
+            else:
+                print(choices)
+                chosen_route = choices[action]
+                
+            print(f"I chose {chosen_route}\n")
             
             # reward based on chosen route latency, again using ffs instead of calculated latency, need a _calculate_reward(agent) method for this
             reward = self.road_network.get_edge_data(self.agent_locations[self.agent_name_mapping[agent]], chosen_route)["ffs"]
             self.rewards[agent] += reward
             
+            # update latency
+            self.agent_wait_time[agent] += reward
+            
             # update agent position
             self.agent_locations[self.agent_name_mapping[agent]] = chosen_route
             
             # kill agent if reached destination
-            if chosen_route == self.agent_destinations[agent]:
-                self.terminations[agent] == True
+            if chosen_route == self.agent_destinations[self.agent_name_mapping[agent]]:
+                self.terminations[agent]== True
             
             # set the next agent to act
             self.agent_selection = self._agent_selector.next()
