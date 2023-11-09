@@ -128,6 +128,11 @@ class raw_env(AECEnv):
         
         # select agent
         agent = self.agent_selection
+        
+        if agent == "agent_1":
+            print("\nBEGIN EPISODE\n------------------------------------")
+        
+        
         if self.agent_wait_time[agent] != 0:
             print(f"{agent} is waiting for {self.agent_wait_time[agent]} time steps!")
             # if agent has waiting time (i.e. "traveling" along edge, decrement wait time by one time step)
@@ -139,15 +144,15 @@ class raw_env(AECEnv):
             choices = list(self.road_network.neighbors(self.agent_locations[self.agent_name_mapping[agent]]))
             
             print(f"\nI am {agent}")
+            print(f"I am at node {self.agent_locations[self.agent_name_mapping[agent]]}")
             
             # if only one action
             if len(choices) == 1:
-                print(choices)
                 chosen_route = [choices[0], choices[0]][action]
             else:
-                print(choices)
                 chosen_route = choices[action]
-                
+            
+            print(f"I can choose {choices}")
             print(f"I chose {chosen_route}\n")
             
             # reward based on chosen route latency, again using ffs instead of calculated latency, need a _calculate_reward(agent) method for this
