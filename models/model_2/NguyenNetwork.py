@@ -127,5 +127,5 @@ if __name__ == "__main__":
     plt.show()
 
     # Example usage
-    result = traffic(demand)
+    result = traffic()
     print(result)

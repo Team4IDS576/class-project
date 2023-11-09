@@ -134,7 +134,7 @@ class raw_env(AECEnv):
         
         
         if self.agent_wait_time[agent] != 0:
-            print(f"{agent} is waiting for {self.agent_wait_time[agent]} time steps!")
+            print(f"{agent} is waiting for {self.agent_wait_time[agent]} time steps at {self.agent_locations[self.agent_name_mapping[agent]]}!")
             # if agent has waiting time (i.e. "traveling" along edge, decrement wait time by one time step)
             self.agent_wait_time[agent] -= 1
             self.agent_selection = self._agent_selector.next()
@@ -172,12 +172,15 @@ class raw_env(AECEnv):
             # set the next agent to act
             self.agent_selection = self._agent_selector.next()
             
+            print(self.observe(agent))
+            
             return self.observe(self.agent_selection), reward, self.terminations[agent], {}
 
     def reset(self, seed=None, options=None):
         
         # reset to initial states
         self.agent_locations = self.agent_origins.copy()
+        self.agent_wait_time = {agent: 0 for agent in self.agents}
         self.rewards = {agent: 0 for agent in self.agents}
         self.terminations = {agent: False for agent in self.agents}
         self.infos = dict(zip(self.agents, [{} for _ in self.agents]))
