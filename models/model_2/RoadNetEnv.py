@@ -128,20 +128,17 @@ class raw_env(AECEnv):
         
         # select agent
         agent = self.agent_selection
-        
         if self.agent_wait_time[agent] != 0:
-            print(f"{agent} is waiting!")
+            print(f"{agent} is waiting for {self.agent_wait_time[agent]} time steps!")
             # if agent has waiting time (i.e. "traveling" along edge, decrement wait time by one time step)
             self.agent_wait_time[agent] -= 1
             self.agent_selection = self._agent_selector.next()
             return
         else:
             # select node to move to from list of available nodes
-            
-            print(agent)
-            print(self.agent_locations[self.agent_name_mapping[agent]])
-            
             choices = list(self.road_network.neighbors(self.agent_locations[self.agent_name_mapping[agent]]))
+            
+            print(f"\nI am {agent}")
             
             # if only one action
             if len(choices) == 1:
