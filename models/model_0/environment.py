@@ -5,7 +5,7 @@ import sys
 
 from gymnasium.spaces import Discrete
 
-from test_net import test_net
+from old.test_net import test_net
 
 
 def raw_env(render_mode=None):

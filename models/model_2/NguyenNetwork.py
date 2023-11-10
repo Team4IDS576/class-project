@@ -2,7 +2,13 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 
-def nguyenNetwork(links):
+def nguyenNetwork():
+    
+    # Read the CSV file into a DataFrame
+    data_types = {"start node": str, "end node": str} # node names should be str
+    
+    # for mac OS
+    links = pd.read_csv("./network/NguyenLinks.csv", dtype=data_types)
     
     # instantiate null directed graph
     network = nx.DiGraph()
@@ -64,7 +70,8 @@ def latency(flow, links, link):
     return t_link
 
 
-def traffic(demand):
+def traffic():
+    demand = pd.read_csv("./network/NguyenDemand.csv")
     agents = []
     origins = []
     destinations = []
@@ -108,7 +115,7 @@ if __name__ == "__main__":
     #demand = pd.read_csv("NguyenDemand.csv")
 
     # load test net
-    network = nguyenNetwork(links=links)
+    network = nguyenNetwork()
     
     # get position of nodes
     pos = nx.get_node_attributes(network, "pos")
@@ -120,5 +127,5 @@ if __name__ == "__main__":
     plt.show()
 
     # Example usage
-    result = traffic(demand)
+    result = traffic()
     print(result)

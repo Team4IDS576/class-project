@@ -3,7 +3,7 @@ import random
 import os
 import sys
 
-from test_net import test_net
+from old.test_net import test_net
 from environment import RoadNetworkEnv
 
 if __name__ == "__main__":
