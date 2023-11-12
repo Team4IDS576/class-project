@@ -3,8 +3,8 @@
 # gymnasium imports
 import gymnasium
 import gymnasium.spaces
-import numpy as np
 from gymnasium.utils import EzPickle
+import numpy as np
 
 # petting zoo imports
 from pettingzoo import AECEnv
@@ -17,10 +17,12 @@ from NguyenNetwork import nguyenNetwork, traffic
 # allows to import the parallel environment using "from NguyenNetworkEnv import parallel_env"
 __all__ = ["ManualPolicy", "env", "parallel_env", "raw_env"]
 
+# environment wrapper
 def env(**kwargs):
     env = raw_env(**kwargs)
     return env
 
+# AEC to parallel wrapper
 parallel_env = parallel_wrapper_fn(env)
 
 class raw_env(AECEnv):
@@ -28,6 +30,10 @@ class raw_env(AECEnv):
         "name": "NguyenNet",
         "is_parallelizable": True
     }
+    
+    """
+    This is the traffic assignment environment. More documentation to follow.
+    """
     
     # initialize environment with the Nguyen Network and Traffic Demand from agents
     def __init__(
@@ -37,32 +43,50 @@ class raw_env(AECEnv):
         render_mode = None
         ):
         '''
-        net:
+        net: NetworkX directed graph network.
+        traffic: Traffic volumes, origins, destinations, and other parameters passed as a dict.
         '''
         
+        # no rendering at the moment
         self.render_mode = render_mode
         
-        # initialize network
+        # initialize network from Nguyen Network
         self.road_network = net
         self.traffic = traffic
         
-        # initialize agents, orgins, current positions, and destinations
+        # initialize agents
         self.agents = self.traffic["agents"] # list of agents in environment
         self.possible_agents = self.agents[:]
-        self.agent_name_mapping = dict(zip(self.agents, list(range(len(self.agents))))) # map list of agents to int id starting at 0
+        self.agent_name_mapping = dict(
+            zip(
+                self.agents,
+                list(range(len(self.agents)))
+                )
+            )
         self._agent_selector = agent_selector(self.agents)
         
-        # agent travel information
+        """
+        We currently have two ways of indexing agents, either there
+        string "Agent_ID" name or there integer id from agent_name_mapping.
+        We should probably refactor to use one or the other in the future.
+        """
+        
+        # agent origin, destination, and location information
         self.agent_origins = self.traffic["origins"]
-        self.agent_locations =self.traffic["origins"]
-        self.agent_destinations =self.traffic["destinations"]
+        self.agent_locations = self.traffic["origins"]
+        self.agent_destinations = self.traffic["destinations"]
+        
+        # store agent path history as a lists
+        self.agent_path_histories = {agent: location for agent, location in zip(self.agents, self.agent_origins)}
         
         # agent wait times initialized at zero
         self.agent_wait_time = {agent: 0 for agent in self.agents}
         
         # agent observation space
+        """
+        dict of agents and there observation spaces - at most 4 corresponding to two possible choices and there latencies.
+        """
         self.observation_spaces = dict(
-            # dict of agents and there observation spaces - at most 4 corresponding to two possible choices and there latencies
             zip(
                 self.agents,
                 [gymnasium.spaces.Discrete(4)]*len(self.agents)
@@ -71,7 +95,7 @@ class raw_env(AECEnv):
         
         # agent action space
         self.action_spaces = dict(
-            # with the nguyen network agents have at 2 nodes to travel to
+            # with the nguyen network agents have at most 2 nodes to travel to
             zip(
                 self.agents,
                 [gymnasium.spaces.Discrete(2)]*len(self.agents)
@@ -82,7 +106,7 @@ class raw_env(AECEnv):
         self._agent_selector.reinit(self.agents)
         self.agent_selection = self._agent_selector.next()
         
-        # agent terminal and truncated state
+        # agent terminal and truncated states
         self.terminations = {agent: False for agent in self.agents}
         self.truncations = {agent: False for agent in self.agents}
         
@@ -115,49 +139,60 @@ class raw_env(AECEnv):
             return [val for pair in zip(agent_node_neighbors, neighboring_nodes_ffs) for val in pair]
 
     def state(self) -> np.ndarray:
+        "We need to return an np-array like object for logging"
         pass
     
     def step(self, action):
+        
+        """
+        This logic should be documented:
+        1) select agent
+        2) check if agent is terminated or truncated - if so pass
+        3) If agent has selected a route and is "traveling", decrement by one time step
+        3a) If agent wait time is zero agent has reached a node and will select next edge to travel on
+        3b) If only one node to travel to, action is 
+        """
+        
+        # select next agent
+        agent = self.agent_selection
+        
         # agent is dead pass
         if (self.terminations[self.agent_selection]
             or self.truncations[self.agent_selection]
             ):
             return
         
-        # need to add logic to update network
+        # need to add logic to update network – I dont't know if this should be done on before first agent or last agent
         
-        # select agent
-        agent = self.agent_selection
-        
-        if agent == "agent_1":
-            print("\nBEGIN EPISODE\n------------------------------------")
-        
-        
+        # agent travel decrement
         if self.agent_wait_time[agent] != 0:
-            print(f"{agent} is waiting for {self.agent_wait_time[agent]} time steps at {self.agent_locations[self.agent_name_mapping[agent]]}!")
             # if agent has waiting time (i.e. "traveling" along edge, decrement wait time by one time step)
             self.agent_wait_time[agent] -= 1
             self.agent_selection = self._agent_selector.next()
             return
         else:
             # select node to move to from list of available nodes
-            choices = list(self.road_network.neighbors(self.agent_locations[self.agent_name_mapping[agent]]))
+            choices = list(
+                self.road_network.neighbors(
+                    self.agent_locations[self.agent_name_mapping[agent]]
+                    )
+                )
             
-            print(f"\nI am {agent}")
-            print(f"I am at node {self.agent_locations[self.agent_name_mapping[agent]]}")
-            
-            # if only one action
+            # if only one route 
             if len(choices) == 1:
                 chosen_route = [choices[0], choices[0]][action]
             else:
                 chosen_route = choices[action]
             
+            # print debugging
             print(f"I can choose {choices}")
             print(f"I chose {chosen_route}\n")
             
             # reward based on chosen route latency, again using ffs instead of calculated latency, need a _calculate_reward(agent) method for this
             reward = self.road_network.get_edge_data(self.agent_locations[self.agent_name_mapping[agent]], chosen_route)["ffs"]
-            self.rewards[agent] += reward
+            
+            # add negative latency to reward – DQN to maximize negative reward
+            self.rewards[agent] -= reward
             
             # update latency
             self.agent_wait_time[agent] += reward
