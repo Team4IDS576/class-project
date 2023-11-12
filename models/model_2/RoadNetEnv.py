@@ -42,6 +42,7 @@ class raw_env(AECEnv):
         traffic = traffic(),
         render_mode = None
         ):
+        
         '''
         net: NetworkX directed graph network.
         traffic: Traffic volumes, origins, destinations, and other parameters passed as a dict.
@@ -77,7 +78,7 @@ class raw_env(AECEnv):
         self.agent_destinations = self.traffic["destinations"]
         
         # store agent path history as a lists
-        self.agent_path_histories = {agent: location for agent, location in zip(self.agents, self.agent_origins)}
+        self.agent_path_histories = {agent: [location] for agent, location in zip(self.agents, self.agent_origins)}
         
         # agent wait times initialized at zero
         self.agent_wait_time = {agent: 0 for agent in self.agents}
@@ -155,6 +156,7 @@ class raw_env(AECEnv):
         
         # select next agent
         agent = self.agent_selection
+        agent_idx = self.agent_name_mapping[agent]
         
         # need to add logic to update network – I dont't know if this should be done on before first agent or last agent
         
@@ -166,44 +168,57 @@ class raw_env(AECEnv):
             return
         
         else:
+
+            # if agent is dead on previous step pass
+            if (self.terminations[agent]
+            or self.truncations[agent]):
+                self.agent_selection = self._agent_selector.next()
+                
+                return
             
             # kill agent if arrived at destination            
-            if self.agent_locations[self.agent_name_mapping[agent]] ==\
-            self.agent_destinations[self.agent_name_mapping[agent]]:
-                self.terminations[agent] == True
-                
-            # truncate agent if arrived at wrong node
-            if self.agent_locations[self.agent_name_mapping[agent]] !=\
-            self.agent_destinations[self.agent_name_mapping[agent]] and (
-                self.agent_destinations[self.agent_name_mapping[agent]] == "2" or
-                self.agent_destinations[self.agent_name_mapping[agent]] == "3"
-            ):
-                self.truncations[agent] == True
+            if self.agent_locations[agent_idx] ==\
+                self.agent_destinations[agent_idx]:
+                    self.terminations[agent] == True
+
+                    # return reward for arriving at destionation
+                    reward = 0 # this value may be adjusted in the future
+                    self.agent_selection = self._agent_selector.next()
+                    return self.observe(self.agent_selection), reward, self.terminations[agent], {}
             
-            # agent is dead pass
-            if (self.terminations[self.agent_selection]
-            or self.truncations[self.agent_selection]):
-                return
+            # truncate agent if arrived at wrong node
+            if self.agent_locations[agent_idx] !=\
+                self.agent_destinations[agent_idx] and (
+                self.agent_locations[agent_idx] == "2" or
+                self.agent_locations[agent_idx] == "3"):
+                    self.truncations[agent] == True
+                    
+                    # return penalty for arriving at wrong destination
+                    reward = 0 # this value may be adjusted in the future
+                    self.agent_selection = self._agent_selector.next()
+                    return self.observe(self.agent_selection), reward, self.terminations[agent], {}
             
             # select node to move to from list of available nodes
             choices = list(
                 self.road_network.neighbors(
-                    self.agent_locations[self.agent_name_mapping[agent]]
+                    self.agent_locations[agent_idx]
                     )
                 )
             
             # if only one route 
             if len(choices) == 1:
-                chosen_route = [choices[0], choices[0]][action]
-            else:
-                chosen_route = choices[action]
-            
-            # print debugging
-            print(f"I can choose {choices}")
-            print(f"I chose {chosen_route}\n")
-            
+                choices = [choices[0], choices[0]]
+
+            print(agent)
+            print(self.agent_destinations[agent_idx])
+            print(self.agent_path_histories[agent])
+            print(choices)
+            chosen_route = choices[action] 
+
             # reward based on chosen route latency, again using ffs instead of calculated latency, need a _calculate_reward(agent) method for this
-            reward = self.road_network.get_edge_data(self.agent_locations[self.agent_name_mapping[agent]], chosen_route)["ffs"]
+            reward = self.road_network.get_edge_data(
+                self.agent_locations[agent_idx],
+                chosen_route)["ffs"]
             
             # add negative latency to reward – DQN to maximize negative reward
             self.rewards[agent] -= reward
@@ -212,12 +227,13 @@ class raw_env(AECEnv):
             self.agent_wait_time[agent] += reward
             
             # update agent position
-            self.agent_locations[self.agent_name_mapping[agent]] = chosen_route
+            self.agent_locations[agent_idx] = chosen_route
+            
+            # update path history
+            self.agent_path_histories[agent].append(chosen_route)
             
             # set the next agent to act
             self.agent_selection = self._agent_selector.next()
-            
-            print(self.observe(agent))
             
             return self.observe(self.agent_selection), reward, self.terminations[agent], {}
 
