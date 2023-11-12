@@ -173,7 +173,6 @@ class raw_env(AECEnv):
             if (self.terminations[agent]
             or self.truncations[agent]):
                 self.agent_selection = self._agent_selector.next()
-                
                 return
             
             # kill agent if arrived at destination            
@@ -209,10 +208,6 @@ class raw_env(AECEnv):
             if len(choices) == 1:
                 choices = [choices[0], choices[0]]
 
-            print(agent)
-            print(self.agent_destinations[agent_idx])
-            print(self.agent_path_histories[agent])
-            print(choices)
             chosen_route = choices[action] 
 
             # reward based on chosen route latency, again using ffs instead of calculated latency, need a _calculate_reward(agent) method for this
@@ -241,6 +236,7 @@ class raw_env(AECEnv):
         
         # reset to initial states
         self.agent_locations = self.agent_origins.copy()
+        self.agent_path_histories = {agent: [location] for agent, location in zip(self.agents, self.agent_origins)}
         self.agent_wait_time = {agent: 0 for agent in self.agents}
         self.rewards = {agent: 0 for agent in self.agents}
         self.terminations = {agent: False for agent in self.agents}
