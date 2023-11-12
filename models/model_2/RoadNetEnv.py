@@ -156,12 +156,6 @@ class raw_env(AECEnv):
         # select next agent
         agent = self.agent_selection
         
-        # agent is dead pass
-        if (self.terminations[self.agent_selection]
-            or self.truncations[self.agent_selection]
-            ):
-            return
-        
         # need to add logic to update network – I dont't know if this should be done on before first agent or last agent
         
         # agent travel decrement
@@ -170,7 +164,27 @@ class raw_env(AECEnv):
             self.agent_wait_time[agent] -= 1
             self.agent_selection = self._agent_selector.next()
             return
+        
         else:
+            
+            # kill agent if arrived at destination            
+            if self.agent_locations[self.agent_name_mapping[agent]] ==\
+            self.agent_destinations[self.agent_name_mapping[agent]]:
+                self.terminations[agent] == True
+                
+            # truncate agent if arrived at wrong node
+            if self.agent_locations[self.agent_name_mapping[agent]] !=\
+            self.agent_destinations[self.agent_name_mapping[agent]] and (
+                self.agent_destinations[self.agent_name_mapping[agent]] == "2" or
+                self.agent_destinations[self.agent_name_mapping[agent]] == "3"
+            ):
+                self.truncations[agent] == True
+            
+            # agent is dead pass
+            if (self.terminations[self.agent_selection]
+            or self.truncations[self.agent_selection]):
+                return
+            
             # select node to move to from list of available nodes
             choices = list(
                 self.road_network.neighbors(
@@ -199,10 +213,6 @@ class raw_env(AECEnv):
             
             # update agent position
             self.agent_locations[self.agent_name_mapping[agent]] = chosen_route
-            
-            # kill agent if reached destination
-            if chosen_route == self.agent_destinations[self.agent_name_mapping[agent]]:
-                self.terminations[agent]== True
             
             # set the next agent to act
             self.agent_selection = self._agent_selector.next()
