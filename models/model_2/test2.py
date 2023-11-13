@@ -1,6 +1,6 @@
-from old.RoadNetEnv import raw_env
-from NguyenNetwork import nguyenNetwork, traffic
+import RoadNetEnv
+import ray
 
-test = raw_env()
+env = RoadNetEnv.parallel_env()
 
-print(list(test.road_network.neighbors("8")))
+ray.rllib.utils.check_env(env)

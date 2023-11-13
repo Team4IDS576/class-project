@@ -103,11 +103,9 @@ class raw_env(AECEnv):
             )
         )
         
-        # current agent
-        self._agent_selector.reinit(self.agents)
-        self.agent_selection = self._agent_selector.next()
-        
         # agent terminal and truncated states
+        self.terminate = False
+        self.truncate = False
         self.terminations = {agent: False for agent in self.agents}
         self.truncations = {agent: False for agent in self.agents}
         
@@ -232,16 +230,27 @@ class raw_env(AECEnv):
             
             return self.observe(self.agent_selection), reward, self.terminations[agent], {}
 
-    def reset(self, seed=None, options=None):
+    def reset(self, *, seed=None, options=None):
         
         # reset to initial states
+        self.agents = self.possible_agents[:]
+        
+        self._agent_selector.reinit(self.agents)
+        self.agent_selection = self._agent_selector.next()
+        
+        self.terminate = False
+        self.truncate = False
+        
         self.agent_locations = self.agent_origins.copy()
         self.agent_path_histories = {agent: [location] for agent, location in zip(self.agents, self.agent_origins)}
         self.agent_wait_time = {agent: 0 for agent in self.agents}
-        self.rewards = {agent: 0 for agent in self.agents}
-        self.terminations = {agent: False for agent in self.agents}
+
+        self.rewards = dict(zip(self.agents, [0 for _ in self.agents]))
+        self._cumulative_rewards = dict(zip(self.agents, [0 for _ in self.agents]))
+        self.terminations = dict(zip(self.agents, [False for _ in self.agents]))
+        self.truncations = dict(zip(self.agents, [False for _ in self.agents]))
         self.infos = dict(zip(self.agents, [{} for _ in self.agents]))
-        
+                
         # we will also need to reset the network - to be added
 
         # return initial observations for each agent
