@@ -112,7 +112,7 @@ if __name__ == "__main__":
         )
     )
     
-    config.environment(disable_env_checking=True)
+    #config.environment(disable_env_checking=True)
     
     tune.run(
         alg_name,

@@ -1,5 +1,10 @@
-import RoadNetEnvEncoded
+from ray.rllib.utils import check_env
 
-test = RoadNetEnvEncoded.raw_env()
+import RoadNetEnvEncoded as rne
+#from pettingzoo.butterfly import pistonball_v6
 
-print(test.observe("agent_1"))
+env = rne.parallel_env()
+
+test = env.step(0)
+
+print(test)

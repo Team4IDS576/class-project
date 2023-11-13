@@ -67,6 +67,7 @@ class raw_env(AECEnv):
                 list(range(len(self.agents)))
                 )
             )
+        #self.agent_selection = self.agents[0]
         self._agent_selector = agent_selector(self.agents)
         
         """
@@ -252,7 +253,7 @@ class raw_env(AECEnv):
             # set the next agent to act
             self.agent_selection = self._agent_selector.next()
             
-            return self.observe(self.agent_selection), reward, self.terminations[agent], {}
+            return self.observe(self.agent_selection), reward, self.terminations[agent], self.truncations[agent], {}
 
     def reset(self, *, seed=None, options=None):
         
@@ -278,5 +279,5 @@ class raw_env(AECEnv):
         # we will also need to reset the network - to be added
 
         # return initial observations for each agent
-        initial_observations = {agent: self.observe(agent) for agent in self.agents}
-        return initial_observations
+        #initial_observations = {agent: self.observe(agent) for agent in self.agents}
+        #return initial_observations, {}
