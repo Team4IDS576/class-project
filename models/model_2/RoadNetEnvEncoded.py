@@ -182,7 +182,7 @@ class raw_env(AECEnv):
         agent = self.agent_selection
         agent_idx = self.agent_name_mapping[agent]
         
-        print(self.terminations)
+        # print(self.terminations)
         # print(agent)
         # print(self.truncations[agent])
         # print(self.terminations[agent])
@@ -220,8 +220,8 @@ class raw_env(AECEnv):
             # kill agent if arrived at destination            
             if self.agent_locations[agent_idx] ==\
                 self.agent_destinations[agent_idx]:
-                    self.terminations[agent] == True
-
+                    self.terminations[agent] = True
+                    
                     # return reward for arriving at destionation
                     reward = 0 # this value may be adjusted in the future
                     self.agent_selection = self._agent_selector.next()
@@ -232,7 +232,7 @@ class raw_env(AECEnv):
                 self.agent_destinations[agent_idx] and (
                 self.agent_locations[agent_idx] == "2" or
                 self.agent_locations[agent_idx] == "3"):
-                    self.truncations[agent] == True
+                    self.truncations[agent] = True
                     
                     # return penalty for arriving at wrong destination
                     reward = 0 # this value may be adjusted in the future
