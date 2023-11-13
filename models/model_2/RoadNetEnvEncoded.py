@@ -168,6 +168,7 @@ class raw_env(AECEnv):
     
     def step(self, action):
         
+        
         """
         This logic should be documented:
         1) select agent
@@ -181,7 +182,25 @@ class raw_env(AECEnv):
         agent = self.agent_selection
         agent_idx = self.agent_name_mapping[agent]
         
+        print(self.terminations)
+        # print(agent)
+        # print(self.truncations[agent])
+        # print(self.terminations[agent])
+        # print(self.agent_path_histories[agent])
+        # for edge in self.road_network.edges(data=True):
+        #     source, target, attributes = edge
+        #     print(f"Edge: {source} -> {target}, Attributes: {attributes}")
+        
         # need to add logic to update network – I dont't know if this should be done on before first agent or last agent
+        
+        """
+        1) look self.agent_path_histories
+        2) get the last two items in each list of path histories
+        3) get the number of agents that are on each link
+        4) update the latency based on the number of agents in the link
+        5) update the network using self.road_network.get_edge_data("node1","node2")["latency"] = new latency using latency function in NguyenNetwork.py
+        
+        """
         
         # agent travel decrement
         if self.agent_wait_time[agent] != 0:
