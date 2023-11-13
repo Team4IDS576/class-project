@@ -77,7 +77,7 @@ target/
 
 # exclude data from source control by default
 /data/
-/ray_results/
+/~/ray_results/
 
 # exclude personal homework folder
 /homework/

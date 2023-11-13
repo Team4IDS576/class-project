@@ -12,7 +12,7 @@ from ray.rllib.utils.framework import try_import_torch
 from ray.rllib.utils.torch_utils import FLOAT_MAX
 from ray.tune.registry import register_env
 
-import RoadNetEnv
+import RoadNetEnvEncoded as rne
 from NguyenNetwork import traffic
 
 torch, nn = try_import_torch()
@@ -34,7 +34,7 @@ class TorchMaskedActions(DQNTorchModel):
         
         obs_len = obs_space.n
         
-        orig_obs_space = Discrete(4)
+        orig_obs_space = Discrete(28)
         
         self.action_embed_model = TorchFC(
             orig_obs_space,
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     ModelCatalog.register_custom_model("pa_model", TorchMaskedActions)
     
     def env_creator():
-        env = RoadNetEnv.parallel_env()
+        env = rne.parallel_env()
         return env
     
     env_name = "NguyenNetwork"

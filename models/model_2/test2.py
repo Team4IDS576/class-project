@@ -1,6 +1,5 @@
-import RoadNetEnv
-import ray
+import RoadNetEnvEncoded
 
-env = RoadNetEnv.parallel_env()
+test = RoadNetEnvEncoded.raw_env()
 
-ray.rllib.utils.check_env(env)
+print(test.observe("agent_1"))

@@ -10,7 +10,7 @@ from ray.rllib.utils.framework import TensorType
 from ray.tune.registry import register_env
 from torch import nn
 
-import RoadNetEnv
+import RoadNetEnvEncoded as roadenvironment
 from NguyenNetwork import traffic
 
 class nnModel(TorchModelV2, nn.Module):
@@ -18,7 +18,7 @@ class nnModel(TorchModelV2, nn.Module):
         TorchModelV2.__init__(self, obs_space, act_space, num_outputs, *args, **kwargs)
         nn.Module.__init__(self)
         self.model = nn.Sequential(
-            nn.Linear(4, 64),
+            nn.Linear(28, 64),
             nn.ReLU()
         )
         
@@ -34,7 +34,7 @@ class nnModel(TorchModelV2, nn.Module):
         return self._value_out
     
 def env_creator(args):
-    env = RoadNetEnv.parallel_env()
+    env = roadenvironment.parallel_env()
     return env
     
 if __name__ == "__main__":
@@ -66,13 +66,15 @@ if __name__ == "__main__":
         .framework(framework="torch")
         .resources(num_gpus=0)
     )
+    
+    #config.environment(disable_env_checking=True)
 
     tune.run(
         "PPO",
         name="PPO",
         stop={"timesteps_total": 500},
         checkpoint_freq=10,
-        local_dir="ray_results/" + env_name,
+        local_dir="~/ray_results/" + env_name,
         config=config.to_dict(),
     )
 
