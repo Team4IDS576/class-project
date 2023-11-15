@@ -1,8 +1,8 @@
 from pettingzoo.test import parallel_api_test
 
-import RoadNetEnvEncoded as rnee
+import RoadNetEnv2 as rne
 
-env = rnee.parallel_env()
+env = rne.parallel_env()
 
 print("start")
 

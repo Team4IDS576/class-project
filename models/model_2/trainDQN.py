@@ -12,7 +12,7 @@ from ray.rllib.utils.framework import try_import_torch
 from ray.rllib.utils.torch_utils import FLOAT_MAX
 from ray.tune.registry import register_env
 
-import RoadNetEnvEncoded as rne
+import models.model_2.OLD_RoadNetEnvEncoded as rne
 from NguyenNetwork import traffic
 
 torch, nn = try_import_torch()

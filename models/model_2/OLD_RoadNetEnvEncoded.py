@@ -23,6 +23,7 @@ __all__ = ["ManualPolicy", "env", "parallel_env", "raw_env"]
 # environment wrapper
 def env(**kwargs):
     env = raw_env(**kwargs)
+    env = wrappers.OrderEnforcingWrapper(env)
     return env
 
 # AEC to parallel wrapper
@@ -67,7 +68,7 @@ class raw_env(AECEnv):
                 list(range(len(self.agents)))
                 )
             )
-        #self.agent_selection = self.agents[0]
+        #self.agent_selection = None
         self._agent_selector = agent_selector(self.agents)
         
         """
