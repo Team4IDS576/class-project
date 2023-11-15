@@ -253,7 +253,7 @@ class raw_env(AECEnv):
         self.agent_wait_time = {agent: 0 for agent in self.agents}
 
         self.rewards = dict(zip(self.agents, [0 for _ in self.agents]))
-        self._cumulative_rewards = dict(zip(self.agents, [0 for _ in self.agents]))
+        self._cumulative_rewards = {a: 0 for a in self.agents}
         self.terminations = dict(zip(self.agents, [False for _ in self.agents]))
         self.truncations = dict(zip(self.agents, [False for _ in self.agents]))
         self.infos = dict(zip(self.agents, [{} for _ in self.agents]))
