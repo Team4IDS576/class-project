@@ -10,7 +10,7 @@ from ray.rllib.utils.framework import TensorType
 from ray.tune.registry import register_env
 from torch import nn
 
-import RoadNetEnvEncoded as roadenvironment
+import models.model_2.old.OLD_RoadNetEnvEncoded as roadenvironment
 from NguyenNetwork import traffic
 
 class nnModel(TorchModelV2, nn.Module):

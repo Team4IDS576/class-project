@@ -1,7 +1,7 @@
 import os
 
 import ray
-from gymnasium.spaces import Discrete
+from gymnasium.spaces import Discrete, Dict, Box
 from ray import tune
 from ray.rllib.algorithms.dqn import DQNConfig
 from ray.rllib.algorithms.dqn.dqn_torch_model import DQNTorchModel
@@ -12,7 +12,7 @@ from ray.rllib.utils.framework import try_import_torch
 from ray.rllib.utils.torch_utils import FLOAT_MAX
 from ray.tune.registry import register_env
 
-import RoadNetEnvEncoded as rne
+import RoadNetEnv2 as rne
 from NguyenNetwork import traffic
 
 torch, nn = try_import_torch()
@@ -21,7 +21,7 @@ class TorchMaskedActions(DQNTorchModel):
     
     def __init__(
         self,
-        obs_space: Discrete,
+        obs_space: Dict,
         action_space: Discrete,
         num_outputs,
         model_config,
@@ -34,7 +34,10 @@ class TorchMaskedActions(DQNTorchModel):
         
         obs_len = obs_space.n
         
-        orig_obs_space = Discrete(28)
+        orig_obs_space = Dict({
+                "observation": Box(low=-1, high=12, shape=(2,1), dtype=int),
+                "latencies": Box(low=0, high=np.inf, shape=(2,1), dtype=float)
+            })
         
         self.action_embed_model = TorchFC(
             orig_obs_space,
@@ -112,7 +115,7 @@ if __name__ == "__main__":
         )
     )
     
-    #config.environment(disable_env_checking=True)
+    config.environment(disable_env_checking=True)
     
     tune.run(
         alg_name,

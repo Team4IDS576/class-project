@@ -14,12 +14,16 @@ from pettingzoo.utils.conversions import parallel_wrapper_fn
 # network imports
 from NguyenNetwork import nguyenNetwork, traffic
 
+# encoding
+from sklearn.preprocessing import LabelBinarizer
+
 # allows to import the parallel environment using "from NguyenNetworkEnv import parallel_env"
 __all__ = ["ManualPolicy", "env", "parallel_env", "raw_env"]
 
 # environment wrapper
 def env(**kwargs):
     env = raw_env(**kwargs)
+    env = wrappers.OrderEnforcingWrapper(env)
     return env
 
 # AEC to parallel wrapper
@@ -64,6 +68,7 @@ class raw_env(AECEnv):
                 list(range(len(self.agents)))
                 )
             )
+        #self.agent_selection = None
         self._agent_selector = agent_selector(self.agents)
         
         """
@@ -90,7 +95,7 @@ class raw_env(AECEnv):
         self.observation_spaces = dict(
             zip(
                 self.agents,
-                [gymnasium.spaces.Discrete(4)]*len(self.agents)
+                [gymnasium.spaces.Discrete(28)]*len(self.agents)
             )
         )
         
@@ -113,6 +118,17 @@ class raw_env(AECEnv):
         self.rewards = {agent: 0 for agent in self.agents}
         self._cumulative_rewards = dict(zip(self.agents, [0 for _ in self.agents]))
         
+        # encoding 
+        nodes = list(self.road_network.nodes())
+        lb = LabelBinarizer()
+        one_hot_encoded = lb.fit_transform(nodes)
+        
+        self.location_mapping = dict(
+            zip(
+                nodes, one_hot_encoded
+            )
+        )
+        
     def observation_space(self, agent):
         return self.observation_spaces[agent]
     
@@ -121,9 +137,17 @@ class raw_env(AECEnv):
     
     def observe(self, agent):
         
+        agent_idx = self.agent_name_mapping[agent]
+        
         # get possible nodes the agent can travel to
-        agent_position = self.agent_locations[self.agent_name_mapping[agent]]
+        agent_position = self.agent_locations[agent_idx]
         agent_node_neighbors = list(self.road_network.neighbors(agent_position))
+        
+        # encode node positions
+        node_encoded = []
+        for node in agent_node_neighbors:
+            encoding = self.location_mapping[node]
+            node_encoded.append(encoding)
         
         # currently using ffs attribute, need to revise to use updated latency
         neighboring_nodes_ffs = []
@@ -133,15 +157,18 @@ class raw_env(AECEnv):
         
         # return observation – a list in structured as [node1, latency1, node 2, latency2]
         if len(agent_node_neighbors) == 1:
-            return [val for pair in zip(agent_node_neighbors, neighboring_nodes_ffs) for val in pair] * 2
+            return [list(node_encoded[0])+[neighboring_nodes_ffs[0]]] * 2
+        elif len(agent_node_neighbors) == 2:
+            return list(node_encoded[0])+[neighboring_nodes_ffs[0]]+list(node_encoded[1])+[neighboring_nodes_ffs[1]]
         else:
-            return [val for pair in zip(agent_node_neighbors, neighboring_nodes_ffs) for val in pair]
+            return [0]*28
 
     def state(self) -> np.ndarray:
         "We need to return an np-array like object for logging"
         pass
     
     def step(self, action):
+        
         
         """
         This logic should be documented:
@@ -156,7 +183,25 @@ class raw_env(AECEnv):
         agent = self.agent_selection
         agent_idx = self.agent_name_mapping[agent]
         
+        # print(self.terminations)
+        # print(agent)
+        # print(self.truncations[agent])
+        # print(self.terminations[agent])
+        # print(self.agent_path_histories[agent])
+        # for edge in self.road_network.edges(data=True):
+        #     source, target, attributes = edge
+        #     print(f"Edge: {source} -> {target}, Attributes: {attributes}")
+        
         # need to add logic to update network – I dont't know if this should be done on before first agent or last agent
+        
+        """
+        1) look self.agent_path_histories
+        2) get the last two items in each list of path histories
+        3) get the number of agents that are on each link
+        4) update the latency based on the number of agents in the link
+        5) update the network using self.road_network.get_edge_data("node1","node2")["latency"] = new latency using latency function in NguyenNetwork.py
+        
+        """
         
         # agent travel decrement
         if self.agent_wait_time[agent] != 0:
@@ -176,8 +221,8 @@ class raw_env(AECEnv):
             # kill agent if arrived at destination            
             if self.agent_locations[agent_idx] ==\
                 self.agent_destinations[agent_idx]:
-                    self.terminations[agent] == True
-
+                    self.terminations[agent] = True
+                    
                     # return reward for arriving at destionation
                     reward = 0 # this value may be adjusted in the future
                     self.agent_selection = self._agent_selector.next()
@@ -188,7 +233,7 @@ class raw_env(AECEnv):
                 self.agent_destinations[agent_idx] and (
                 self.agent_locations[agent_idx] == "2" or
                 self.agent_locations[agent_idx] == "3"):
-                    self.truncations[agent] == True
+                    self.truncations[agent] = True
                     
                     # return penalty for arriving at wrong destination
                     reward = 0 # this value may be adjusted in the future
@@ -228,7 +273,7 @@ class raw_env(AECEnv):
             # set the next agent to act
             self.agent_selection = self._agent_selector.next()
             
-            return self.observe(self.agent_selection), reward, self.terminations[agent], {}
+            return self.observe(self.agent_selection), reward, self.terminations[agent], self.truncations[agent], {}
 
     def reset(self, *, seed=None, options=None):
         
@@ -254,5 +299,5 @@ class raw_env(AECEnv):
         # we will also need to reset the network - to be added
 
         # return initial observations for each agent
-        initial_observations = {agent: self.observe(agent) for agent in self.agents}
-        return initial_observations
+        #initial_observations = {agent: self.observe(agent) for agent in self.agents}
+        #return initial_observations, {}

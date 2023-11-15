@@ -1,10 +1,8 @@
-from ray.rllib.utils import check_env
+import RoadNetEnv2
 
-import RoadNetEnvEncoded as rne
-#from pettingzoo.butterfly import pistonball_v6
+env = RoadNetEnv2.raw_env()
 
-env = rne.parallel_env()
+test = env.road_network.neighbors("10")
 
-test = env.step(0)
-
-print(test)
+for item in test:
+    print(item)
