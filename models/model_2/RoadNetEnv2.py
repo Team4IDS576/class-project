@@ -141,10 +141,6 @@ class raw_env(AECEnv):
             neighboring_nodes_ffs = [0,0]
             
         observations  = np.array(neighboring_nodes_ffs+node_encoded)
-        # print(self.terminations)
-        # print(self.truncations)
-        # print(self.agent_locations[self.agent_name_mapping[agent]])
-        # print(observations)
         
         return observations
 
@@ -235,7 +231,6 @@ class raw_env(AECEnv):
         
         # update path history
         self.agent_path_histories[agent].append(chosen_route)
-        
         
         # set the next agent to act
         self.agent_selection = self._agent_selector.next()
