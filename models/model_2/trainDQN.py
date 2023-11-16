@@ -1,6 +1,7 @@
 import os
 
 import ray
+import numpy as np
 from gymnasium.spaces import Discrete, Dict, Box
 from ray import tune
 from ray.rllib.algorithms.dqn import DQNConfig
