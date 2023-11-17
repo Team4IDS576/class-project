@@ -42,7 +42,7 @@ memory = MultiAgentReplayBuffer(
 
 NET_CONFIG = {
     "arch": "mlp",
-    "h_size": [64, 64]
+    "h_size": [32, 32]
 }
 
 agent = MADDPG(
@@ -58,11 +58,11 @@ agent = MADDPG(
     net_config=NET_CONFIG
 )
 
-episodes = 10
-max_steps = 200
+episodes = 5
+max_steps = 100
 epsilon = 1.0
 eps_end = 0.1
-eps_decay = 0.95
+eps_decay = 0.995
 
 for ep in trange(episodes):
     state, info = env.reset()
@@ -112,6 +112,8 @@ for ep in trange(episodes):
     
     # update epsilon for exploration
     epsilon = max(eps_end, epsilon * eps_decay)
+    
+    print(env.state())
         
 
 print(agent.scores)

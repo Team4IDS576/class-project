@@ -134,7 +134,7 @@ class raw_env(AECEnv):
 
     def state(self) -> np.ndarray:
         "We need to return an np-array like object for logging"
-        return self.agent_origins, self.agent_origin_backup
+        return self.agent_path_histories.values()
         
     def step(self, action):
         # check if agent is dead
@@ -170,7 +170,7 @@ class raw_env(AECEnv):
             # self.terminations[agent] = True
             
             # return reward for arriving at destionation
-            completion_reward = 0 # this value may be adjusted in the future
+            completion_reward = 100 # this value may be adjusted in the future
             self.rewards[agent] = completion_reward
             self.agent_selection = self._agent_selector.next()
             self._accumulate_rewards()
@@ -225,8 +225,6 @@ class raw_env(AECEnv):
         self._accumulate_rewards()
 
     def reset(self, seed=None, options=None):
-        if seed is not None:
-            self._seed(seed)
         # reset to initial states
         self.agent_origins = self.agent_origin_backup.copy()
         self.agent_locations = self.agent_origin_backup.copy()
