@@ -1,7 +1,7 @@
-from pettingzoo.test import api_test
+from pettingzoo.test import parallel_api_test
 
 import RoadNetEnv2
 
-env = RoadNetEnv2.raw_env()
+env = RoadNetEnv2.parallel_env()
 
-api_test(env, num_cycles=100)
+parallel_api_test(env, num_cycles=1000)

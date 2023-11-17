@@ -2,6 +2,7 @@
 
 import gymnasium
 from gymnasium.spaces import Box, Dict, Discrete
+from gymnasium.spaces.utils import flatten_space
 from gymnasium.utils import EzPickle
 import numpy as np
 
@@ -10,9 +11,6 @@ from pettingzoo.utils import agent_selector, wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
 from NguyenNetwork import nguyenNetwork, traffic
-
-# encoding
-from sklearn.preprocessing import LabelBinarizer
 
 # allows to import the parallel environment using "from NguyenNetworkEnv import parallel_env"
 __all__ = ["ManualPolicy", "env", "parallel_env", "raw_env"]
@@ -57,19 +55,30 @@ class raw_env(AECEnv):
         self.agent_name_mapping = dict(zip(self.agents, list(range(len(self.agents)))))
         self._agent_selector = agent_selector(self.agents)
         
+        # manage dead agents to remove at end of cycle
+        self.kill_list = []
+        self.agent_list = []
+        self.dead_agents = []
+        
         # agent origin, destination, and location information
-        self.agent_origins = self.traffic["origins"]
-        self.agent_locations = self.traffic["origins"]
+        self.agent_origins = self.traffic["origins"].copy()
+        self.agent_origin_backup = self.traffic["origins"].copy()
+        self.agent_locations = self.traffic["origins"].copy()
         self.agent_destinations = self.traffic["destinations"]
-        self.agent_path_histories = {agent: [location] for agent, location in zip(self.agents, self.agent_origins)}
+        self.agent_path_histories = {agent: [location] for agent, location in zip(self.agents, self.agent_locations)}
         self.agent_wait_time = {agent: 0 for agent in self.agents}
         
-        # agent observation space
-        self.observation_spaces = {
+        # agent unflattened observation space
+        self.unflattened_observation_spaces = {
             agent: Dict({
                 "observation": Box(low=-1, high=12, shape=(2,1), dtype=int),
-                "latencies": Box(low=0, high=np.inf, shape=(2,1), dtype=float)
+                "latencies": Box(low=0, high=1e5, shape=(2,1), dtype=int)
             }) for agent in self.agents
+        }
+        
+        # agent flattened observatino space
+        self.observation_spaces = {
+            i: flatten_space(self.unflattened_observation_spaces[i]) for i in self.unflattened_observation_spaces
         }
         
         # agent action space
@@ -84,16 +93,6 @@ class raw_env(AECEnv):
         # agent terminal and truncated states
         self.terminate = False
         self.truncate = False
-        
-        # network node encoding 
-        nodes = list(self.road_network.nodes())
-        lb = LabelBinarizer()
-        one_hot_encoded = lb.fit_transform(nodes)
-        self.location_mapping = dict(
-            zip(
-                nodes, one_hot_encoded
-            )
-        )
         
     def observation_space(self, agent):
         return self.observation_spaces[agent]
@@ -129,31 +128,22 @@ class raw_env(AECEnv):
             node_encoded = [-1,-1]
             neighboring_nodes_ffs = [0,0]
             
-        observations = {
-            "observation": np.array(node_encoded).reshape(2,1),
-            "latencies": np.array(neighboring_nodes_ffs).reshape(2,1)
-        }
-        
-        # print(self.terminations)
-        # print(self.truncations)
-        # print(self.agent_locations[self.agent_name_mapping[agent]])
-        # print(observations)
+        observations  = np.array(neighboring_nodes_ffs+node_encoded)
         
         return observations
 
     def state(self) -> np.ndarray:
         "We need to return an np-array like object for logging"
-        pass
-    
+        return self.agent_path_histories.values()
+        
     def step(self, action):
         # check if agent is dead
-        if (
-            self.terminations[self.agent_selection] or
-            self.truncations[self.agent_selection]
-        ):
-            self._was_dead_step(action)
-            return
-        
+        # if (
+        #     self.terminations[self.agent_selection] or
+        #     self.truncations[self.agent_selection]
+        # ):
+        #     self._was_dead_step(action)
+        #     return
         action = np.asarray(action)
         agent = self.agent_selection
         agent_idx = self.agent_name_mapping[agent]
@@ -172,35 +162,30 @@ class raw_env(AECEnv):
             # if agent has waiting time (i.e. "traveling" along edge, decrement wait time by one time step)
             self.agent_wait_time[agent] -= 1
             self.agent_selection = self._agent_selector.next()
+            self._accumulate_rewards()
             return
         
         # agent reaches terminal state
         if self.agent_locations[agent_idx] == self.agent_destinations[agent_idx]:
-            #self.terminate = True
-            self.terminations[agent] = True
+            # self.terminations[agent] = True
             
             # return reward for arriving at destionation
-            completion_reward = 0 # this value may be adjusted in the future
+            completion_reward = 100 # this value may be adjusted in the future
             self.rewards[agent] = completion_reward
-            self._accumulate_rewards()
-
-            # select next agent
             self.agent_selection = self._agent_selector.next()
+            self._accumulate_rewards()
             return
         
         # agent reaches truncation state
         if self.agent_locations[agent_idx] != self.agent_destinations[agent_idx] and \
         (self.agent_locations[agent_idx] == "2" or self.agent_locations[agent_idx] == "3"):
-            #self.truncate = True
-            self.truncations[agent] = True
+            # self.truncations[agent] = True
                     
             # return penalty for arriving at wrong destination
-            completion_penalty = 0 # this value may be adjusted in the future
+            completion_penalty = -100 # this value may be adjusted in the future
             self.rewards[agent] = completion_penalty
-            self._accumulate_rewards()
-            
-            # select next agent
             self.agent_selection = self._agent_selector.next()
+            self._accumulate_rewards()
             return
         
         # agent chooses action
@@ -234,24 +219,23 @@ class raw_env(AECEnv):
         # update path history
         self.agent_path_histories[agent].append(chosen_route)
         
+        
         # set the next agent to act
-        self.agent_selection = self._agent_selector.next() 
+        self.agent_selection = self._agent_selector.next()
         self._accumulate_rewards()
 
     def reset(self, seed=None, options=None):
         # reset to initial states
-        self.agents = self.possible_agents
-        
-        self._agent_selector.reinit(self.agents)
-        self.agent_selection = self._agent_selector.next()
-        
-        self.terminate = False
-        self.truncate = False
-        
-        self.agent_locations = self.agent_origins
+        self.agent_origins = self.agent_origin_backup.copy()
+        self.agent_locations = self.agent_origin_backup.copy()
         self.agent_path_histories = {agent: [location] for agent, location in zip(self.agents, self.agent_origins)}
         self.agent_wait_time = {agent: 0 for agent in self.agents}
 
+        self.agents = self.possible_agents[:]        
+        self._agent_selector.reinit(self.agents)
+        self.agent_selection = self._agent_selector.next()
+        self.terminate = False
+        self.truncate = False
         self.rewards = dict(zip(self.agents, [0 for _ in self.agents]))
         self._cumulative_rewards = {a: 0 for a in self.agents}
         self.terminations = dict(zip(self.agents, [False for _ in self.agents]))
