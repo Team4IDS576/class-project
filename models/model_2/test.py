@@ -1,6 +1,6 @@
 from pettingzoo.test import parallel_api_test
 
-import RoadNetEnv2 as rne
+import RoadNetEnv3 as rne
 
 env = rne.parallel_env()
 

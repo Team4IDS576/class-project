@@ -1,4 +1,4 @@
-import RoadNetEnv2
+import RoadNetEnv3
 
 import torch
 import numpy as np
@@ -8,7 +8,7 @@ from tqdm import trange
 
 # instantiate env and torch device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-env = RoadNetEnv2.parallel_env()
+env = RoadNetEnv3.parallel_env()
 env.reset()
 
 # configure algo input parameters
@@ -113,7 +113,7 @@ for ep in trange(episodes):
     # update epsilon for exploration
     epsilon = max(eps_end, epsilon * eps_decay)
     
-    print(env.state())
+    print(list(agent_reward.values()))
         
 
 print(agent.scores)
