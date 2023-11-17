@@ -13,7 +13,7 @@ os.chdir("C:/github/Class-Project/class-project/AequilibraE")
 
 folder = gettempdir()
 
-dem = pd.read_csv("NguyenDemand.csv")
+dem = pd.read_csv("NguyenDemandLowDemand.csv")
 zones = int(max(dem.Origin.max(), dem.Destination.max()))
 index = np.arange(zones) + 1
 
@@ -30,7 +30,7 @@ aem.create_empty(file_name=aemfile, zones=zones, matrix_names=['matrix'], memory
 aem.matrix['matrix'][:,:] = mtx[:,:]
 aem.index[:] = index[:]
 
-net = pd.read_csv("NguyenLinks.csv", sep=",", lineterminator="\n")
+net = pd.read_csv("NguyenLinksHighDemand.csv", sep=",", lineterminator="\n")
 
 net.columns = ["newline", "a_node", "b_node", "free flow time", "capacity", "alpha", "beta", "latency"]
 
@@ -74,9 +74,9 @@ assig.execute()
 
 
 results=assig.results()
-results.to_csv("Results.csv")
+results.to_csv("Results_lowdemand.csv")
 print(results)
 
 report = assig.report()
-report.to_csv("Report.csv")
+report.to_csv("Report_lowdemand.csv")
 print(report)
