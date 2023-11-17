@@ -42,7 +42,7 @@ memory = MultiAgentReplayBuffer(
 
 NET_CONFIG = {
     "arch": "mlp",
-    "h_size": [32, 32]
+    "h_size": [64, 64]
 }
 
 agent = MADDPG(
@@ -55,7 +55,7 @@ agent = MADDPG(
     min_action=min_action,
     discrete_actions=True,
     device=device,
-    net_config=NET_CONFIG
+    net_config=NET_CONFIG,
 )
 
 episodes = 5
@@ -68,7 +68,7 @@ for ep in trange(episodes):
     state, info = env.reset()
     agent_reward = {agent_id: 0 for agent_id in env.agents}
     
-    for _ in range(max_steps):
+    for i in range(max_steps):
         agent_mask = info["agent_mask"] if "agent_mask" in info.keys() else None
         env_defined_actions = (
             info["env_defined_actions"]
@@ -104,7 +104,15 @@ for ep in trange(episodes):
         # update state
         state = next_state
         
-        # break when all agents reach destination
+        #break when all agents reach destination (doesnt work)
+        '''
+        _, done = env.state()
+        
+        if done == True:
+            break
+        '''
+        
+    # metric logging
     
     # save the total episode reward
     score = sum(agent_reward.values())

@@ -55,10 +55,9 @@ class raw_env(AECEnv):
         self.agent_name_mapping = dict(zip(self.agents, list(range(len(self.agents)))))
         self._agent_selector = agent_selector(self.agents)
         
-        # manage dead agents to remove at end of cycle
-        self.kill_list = []
-        self.agent_list = []
-        self.dead_agents = []
+        # check
+        self.terminations_check = dict(zip(self.agents, [False for _ in self.agents]))
+        self.truncations_check = dict(zip(self.agents, [False for _ in self.agents]))
         
         # agent origin, destination, and location information
         self.agent_origins = self.traffic["origins"].copy()
@@ -68,11 +67,12 @@ class raw_env(AECEnv):
         self.agent_path_histories = {agent: [location] for agent, location in zip(self.agents, self.agent_locations)}
         self.agent_wait_time = {agent: 0 for agent in self.agents}
         
-        # agent unflattened observation space
+        # agent unflattened observation space, this is flattened alphabetically btw.
         self.unflattened_observation_spaces = {
             agent: Dict({
                 "observation": Box(low=-1, high=12, shape=(2,1), dtype=int),
-                "latencies": Box(low=0, high=1e5, shape=(2,1), dtype=int)
+                "latencies": Box(low=0, high=1e5, shape=(2,1), dtype=int),
+                "location": Box(low = 0, high = 12, shape = (1,1), dtype=int),
             }) for agent in self.agents
         }
         
@@ -108,6 +108,11 @@ class raw_env(AECEnv):
         agent_position = self.agent_locations[agent_idx]
         agent_node_neighbors = list(self.road_network.neighbors(agent_position))
         
+        # encode position
+        position = []
+        encoding = int(self.agent_locations[agent_idx])-1
+        position.append(encoding)
+        
         # encode node positions
         node_encoded = []
         for node in agent_node_neighbors:
@@ -128,23 +133,35 @@ class raw_env(AECEnv):
             node_encoded = [-1,-1]
             neighboring_nodes_ffs = [0,0]
             
-        observations  = np.array(neighboring_nodes_ffs+node_encoded)
+        observations  = np.array(neighboring_nodes_ffs+position+node_encoded)
         
         return observations
 
     def state(self) -> np.ndarray:
-        "We need to return an np-array like object for logging"
-        return self.agent_path_histories.values()
+        """We need to return an np-array like object for logging"""
+
+        # truncations and terminations do not work here - so this is a check to make sure all agents are done.
+        complete = {}
+        for key in self.terminations_check.keys():
+            if self.terminations_check[key] or self.truncations_check[key]:
+                complete[key] = True
+            else:
+                complete[key] = False
+        done = all(value for value in complete.values())
+        
+        return self.agent_locations, done
         
     def step(self, action):
-        # check if agent is dead
-        if (
-            self.terminations[self.agent_selection] or
-            self.truncations[self.agent_selection]
-        ):
-            self.agent_selection = self._agent_selector.next()
-            self._accumulate_rewards()
-            return
+        """This does not work"""
+        # # check if agent is dead
+        # if (
+        #     self.terminations_check[self.agent_selection] or
+        #     self.truncations_check[self.agent_selection]
+        # ):
+        #     # self.rewards[self.agent_selection] = 0
+        #     self.agent_selection = self._agent_selector.next()
+        #     #self._accumulate_rewards()
+        #     return
         
         action = np.asarray(action)
         agent = self.agent_selection
@@ -169,7 +186,7 @@ class raw_env(AECEnv):
         
         # agent reaches terminal state
         if self.agent_locations[agent_idx] == self.agent_destinations[agent_idx]:
-            # self.terminations[agent] = True
+            self.terminations_check[agent] = True
             
             # return reward for arriving at destionation
             completion_reward = 0 # this value may be adjusted in the future
@@ -181,7 +198,7 @@ class raw_env(AECEnv):
         # agent reaches truncation state
         if self.agent_locations[agent_idx] != self.agent_destinations[agent_idx] and \
         (self.agent_locations[agent_idx] == "2" or self.agent_locations[agent_idx] == "3"):
-            # self.truncations[agent] = True
+            self.truncations_check[agent] = True
                     
             # return penalty for arriving at wrong destination
             completion_penalty = -100 # this value may be adjusted in the future
@@ -243,3 +260,7 @@ class raw_env(AECEnv):
         self.terminations = dict(zip(self.agents, [False for _ in self.agents]))
         self.truncations = dict(zip(self.agents, [False for _ in self.agents]))
         self.infos = dict(zip(self.agents, [{} for _ in self.agents]))
+        
+        # check
+        self.terminations_check = dict(zip(self.agents, [False for _ in self.agents]))
+        self.truncations_check = dict(zip(self.agents, [False for _ in self.agents]))
