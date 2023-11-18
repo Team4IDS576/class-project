@@ -54,20 +54,20 @@ def nguyenNetwork():
     
     return network
 
-
-
-def latency(flow, links, link):
+def latency(flow, start_node, end_node):
+    network = nguyenNetwork()
+    edge_data = network.get_edge_data(str(start_node), str(end_node))
     
     # 'flow' takes the total No. of vehicle in the link
-    # 'link' takes the # of the link ("No" column in the CSV file of the network)
+    # 'start_node' and 'end_node' should be integer values
     # This function assumes that the travel time of the links are BPR functions.
     # for more information about BPR functions read p#358 of Sheffi's book.
-    c = links[links['No'] == link]['capacity']
-    t_0 = links[links['No'] == link]['free flow speed']
-    a = links[links['No'] == link]['alpha']
-    b = links[links['No'] == link]['beta']
+    c = edge_data['capacity']
+    t_0 = edge_data['ffs']
+    a = edge_data['alpha']
+    b = edge_data['beta']
     t_link = t_0 * (1 + (a * ((flow/c) ** b)))
-    return t_link
+    return round(t_link) # this function only returns integer values
 
 
 def traffic():
