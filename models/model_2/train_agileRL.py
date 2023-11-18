@@ -121,7 +121,4 @@ for ep in trange(episodes):
     # update epsilon for exploration
     epsilon = max(eps_end, epsilon * eps_decay)
     
-    print(list(agent_reward.values()))
-        
-
 print(agent.scores)
