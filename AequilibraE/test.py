@@ -13,7 +13,7 @@ os.chdir("C:/github/Class-Project/class-project/AequilibraE")
 
 folder = gettempdir()
 
-dem = pd.read_csv("NguyenDemandLowDemand.csv")
+dem = pd.read_csv("NguyenDemandHighDemand.csv")
 zones = int(max(dem.Origin.max(), dem.Destination.max()))
 index = np.arange(zones) + 1
 
@@ -74,9 +74,9 @@ assig.execute()
 
 
 results=assig.results()
-results.to_csv("Results_lowdemand.csv")
+results.to_csv("Results_Highdemand.csv")
 print(results)
 
 report = assig.report()
-report.to_csv("Report_lowdemand.csv")
+report.to_csv("Report_Highdemand.csv")
 print(report)
