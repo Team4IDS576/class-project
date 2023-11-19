@@ -197,17 +197,19 @@ class raw_env(AECEnv):
 
             for edge, agent_count in agents_on_link.items():
                 link_data = self.road_network.get_edge_data(*edge)
+                # print(agent_count)
+                # print(len(edge)) # always 2
 
-                flow = agent_count  # 'flow' takes the total number of vehicles in the link         
+                flow = agent_count  # 'flow' takes the total number of vehicles in the link                         
                 start_node = np.int64(edge[0])            
                 end_node = np.int64(edge[1])            
 
                 new_latency = latency(flow, start_node, end_node)                       
                 link_data["latency"] = new_latency            
-                print(link_data)                   
+                # print(link_data)                   
 
                 self.road_network[edge[0]][edge[1]]["latency"] = new_latency
-                print(f"Updated latency for edge {edge}: {self.road_network[edge[0]][edge[1]]['latency']}") 
+                # print(f"Updated latency for edge {edge}: {self.road_network[edge[0]][edge[1]]['latency']}") 
 
             self._clear_rewards()
         else:
