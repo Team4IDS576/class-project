@@ -121,20 +121,29 @@ class raw_env(AECEnv):
             node_encoded.append(encoding)
         
         # currently using ffs attribute, need to revise to use updated latency
-        neighboring_nodes_ffs = []
+        # neighboring_nodes_ffs = []
+        # for node in agent_node_neighbors:
+        #     ffs_value = self.road_network.get_edge_data(agent_position, node)["ffs"]
+        #     neighboring_nodes_ffs.append(ffs_value)
+
+        # updated to use "latency" instead of "ffs"
+        neighboring_nodes_latencies = []
         for node in agent_node_neighbors:
-            ffs_value = self.road_network.get_edge_data(agent_position, node)["ffs"]
-            neighboring_nodes_ffs.append(ffs_value)
-            
+            latency_value = self.road_network.get_edge_data(agent_position, node)["latency"]
+            neighboring_nodes_latencies.append(latency_value)
+
         # return observation – a list in structured as [node1, latency1, node 2, latency2]
         if len(agent_node_neighbors) == 1:
             node_encoded = node_encoded*2
-            neighboring_nodes_ffs = neighboring_nodes_ffs*2
+            # neighboring_nodes_ffs = neighboring_nodes_ffs*2
+            neighboring_nodes_latencies = neighboring_nodes_latencies*2
         if len(agent_node_neighbors) == 0:
             node_encoded = [-1,-1]
-            neighboring_nodes_ffs = [0,0]
+            # neighboring_nodes_ffs = [0,0]
+            neighboring_nodes_latencies = [0,0]
             
-        observations  = np.array(neighboring_nodes_ffs+position+node_encoded)
+        # observations  = np.array(neighboring_nodes_ffs+position+node_encoded)
+        observations = np.array(neighboring_nodes_latencies + position + node_encoded)
         
         return observations
 
@@ -172,6 +181,36 @@ class raw_env(AECEnv):
         
         if self._agent_selector.is_last():
             "implement logic to update environment"
+            agent_position = self.agent_locations[agent_idx]
+            agent_node_neighbors = list(self.road_network.neighbors(agent_position))
+
+            # Track the count of agents on each link
+            agents_on_link = {edge: 0 for edge in self.road_network.edges()}
+            
+            # Update the count based on the agent's neighbors
+            for node in agent_node_neighbors:
+                for edge in zip([agent_position], [node]):
+                    agents_on_link[edge] += 1  # Increment count when an agent enters a link
+
+
+            from NguyenNetwork import latency
+
+            for edge, agent_count in agents_on_link.items():
+                link_data = self.road_network.get_edge_data(*edge)
+                # print(agent_count)
+                # print(len(edge)) # always 2
+
+                flow = agent_count  # 'flow' takes the total number of vehicles in the link                         
+                start_node = np.int64(edge[0])            
+                end_node = np.int64(edge[1])            
+
+                new_latency = latency(flow, start_node, end_node)                       
+                link_data["latency"] = new_latency            
+                # print(link_data)                   
+
+                self.road_network[edge[0]][edge[1]]["latency"] = new_latency
+                # print(f"Updated latency for edge {edge}: {self.road_network[edge[0]][edge[1]]['latency']}") 
+
             self._clear_rewards()
         else:
             self._clear_rewards()
@@ -225,7 +264,8 @@ class raw_env(AECEnv):
         # reward based on chosen route latency, again using ffs instead of calculated latency, need a _calculate_reward(agent) method for this
         reward = self.road_network.get_edge_data(
             self.agent_locations[agent_idx],
-            chosen_route)["ffs"]
+            # chosen_route)["ffs"]
+            chosen_route)["latency"]
         
         # add negative latency to reward – DQN to maximize negative reward
         self.rewards[agent] = -1*reward
