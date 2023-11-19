@@ -66,7 +66,8 @@ class raw_env(AECEnv):
         self.agent_destinations = self.traffic["destinations"]
         self.agent_path_histories = {agent: [location] for agent, location in zip(self.agents, self.agent_locations)}
         self.agent_wait_time = {agent: 0 for agent in self.agents}
-        
+        self.agent_travel_time = {agent: 0 for agent in self.agents}
+
         # agent unflattened observation space, this is flattened alphabetically btw.
         self.unflattened_observation_spaces = {
             agent: Dict({
@@ -231,6 +232,7 @@ class raw_env(AECEnv):
         
         # update latency
         self.agent_wait_time[agent] += reward
+        self.agent_travel_time[agent] += reward
         
         # update agent position
         self.agent_locations[agent_idx] = chosen_route

@@ -9,7 +9,7 @@ def nguyenNetwork():
     
     # for mac OS
     links = pd.read_csv("./network/NguyenLinks.csv", dtype=data_types)
-    
+    links['flow'] = 0
     # instantiate null directed graph
     network = nx.DiGraph()
     
@@ -43,7 +43,8 @@ def nguyenNetwork():
                "capacity": row["capacity"],
                "alpha": row["alpha"],
                "beta": row["beta"],
-               "latency": row["latency"]}) for _, row in links.iterrows()]
+               "latency": row["latency"],
+               "flow": row["flow"]}) for _, row in links.iterrows()]
 
     # Print the list of roads
     # print(roads)
