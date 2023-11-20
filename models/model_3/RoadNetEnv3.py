@@ -10,7 +10,7 @@ from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
-from NguyenNetwork import nguyenNetwork, traffic
+from NguyenNetwork import nguyenNetwork, traffic, latency
 
 # allows to import the parallel environment using "from NguyenNetworkEnv import parallel_env"
 __all__ = ["ManualPolicy", "env", "parallel_env", "raw_env"]
@@ -191,9 +191,6 @@ class raw_env(AECEnv):
             for node in agent_node_neighbors:
                 for edge in zip([agent_position], [node]):
                     agents_on_link[edge] += 1  # Increment count when an agent enters a link
-
-
-            from NguyenNetwork import latency
 
             for edge, agent_count in agents_on_link.items():
                 link_data = self.road_network.get_edge_data(*edge)
