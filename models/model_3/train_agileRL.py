@@ -1,5 +1,5 @@
 import RoadNetEnv3
-
+import pandas as pd
 import torch
 import numpy as np
 from agilerl.components.multi_agent_replay_buffer import MultiAgentReplayBuffer
@@ -65,6 +65,7 @@ eps_end = 0.1
 eps_decay = 0.995
 
 episode_travel_times = []
+travel_times_df = pd.DataFrame(columns=agent_ids)
 
 for ep in trange(episodes):
     state, info = env.reset()
@@ -117,7 +118,7 @@ for ep in trange(episodes):
     # metric logging
     travel_time = env.state()
     episode_travel_times.append(travel_time) # export to csv
-    
+    travel_times_df.loc[len(travel_times_df)] = travel_time[0]
     
     # save the total episode reward
     score = sum(agent_reward.values())
@@ -127,3 +128,4 @@ for ep in trange(episodes):
     epsilon = max(eps_end, epsilon * eps_decay)
     
 print(agent.scores) # export to csv
+travel_times_df.to_csv('models/episode_travel_times.csv')
