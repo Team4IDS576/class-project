@@ -38,7 +38,7 @@ class raw_env(AECEnv):
     def __init__(
         self,
         net = nguyenNetwork(),
-        traffic = traffic(),
+        traffic = traffic(high=False),
         render_mode = None
         ):
         
