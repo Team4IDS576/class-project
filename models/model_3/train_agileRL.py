@@ -115,7 +115,9 @@ for ep in trange(episodes):
         '''
         
     # metric logging
-    episode_travel_times
+    travel_time = env.state()
+    episode_travel_times.append(travel_time) # export to csv
+    
     
     # save the total episode reward
     score = sum(agent_reward.values())
@@ -124,4 +126,4 @@ for ep in trange(episodes):
     # update epsilon for exploration
     epsilon = max(eps_end, epsilon * eps_decay)
     
-print(agent.scores)
+print(agent.scores) # export to csv
