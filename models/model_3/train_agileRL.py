@@ -64,6 +64,8 @@ epsilon = 1.0
 eps_end = 0.1
 eps_decay = 0.995
 
+episode_travel_times = []
+
 for ep in trange(episodes):
     state, info = env.reset()
     agent_reward = {agent_id: 0 for agent_id in env.agents}
@@ -113,6 +115,7 @@ for ep in trange(episodes):
         '''
         
     # metric logging
+    episode_travel_times
     
     # save the total episode reward
     score = sum(agent_reward.values())

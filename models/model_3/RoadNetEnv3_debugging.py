@@ -166,7 +166,7 @@ class raw_env(AECEnv):
         for link in data:
             latencies.append(link[-1]["latency"])
         
-        return latencies
+        return list(self.agent_travel_time.values())
         
         
     def step(self, action):
@@ -311,3 +311,4 @@ class raw_env(AECEnv):
         # check
         self.terminations_check = dict(zip(self.agents, [False for _ in self.agents]))
         self.truncations_check = dict(zip(self.agents, [False for _ in self.agents]))
+
