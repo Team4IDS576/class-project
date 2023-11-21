@@ -124,6 +124,7 @@ for ep in trange(episodes):
     
     # update epsilon for exploration
     epsilon = max(eps_end, epsilon * eps_decay)
+    print(env.state())
     
 print(agent.scores) # export to csv
 
