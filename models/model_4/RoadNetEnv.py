@@ -151,7 +151,7 @@ class raw_env(AECEnv):
 
     def state(self) -> np.ndarray:
         """We need to return an np-array like object for logging"""
-        return list(self.agent_travel_time.keys())
+        return list(self.agent_travel_time.values())
 
 
 

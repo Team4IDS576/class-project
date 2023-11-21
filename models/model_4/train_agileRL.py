@@ -34,7 +34,7 @@ agent_ids = [agent_id for agent_id in env.agents]
 done = {agent_id: False for agent_id in env.agents}
 field_names = ["state", "action", "reward", "next_state", "done"]
 memory = MultiAgentReplayBuffer(
-    memory_size=1_000_000,
+    memory_size=1_000,
     field_names=field_names,
     agent_ids=agent_ids,
     device=device
@@ -65,13 +65,12 @@ eps_end = 0.1
 eps_decay = 0.995
 
 episode_travel_times = []
-travel_times_df = pd.DataFrame(columns=agent_ids)
 
 for ep in trange(episodes):
     state, info = env.reset()
     agent_reward = {agent_id: 0 for agent_id in env.agents}
     
-    for i in range(max_steps):
+    for i in trange(max_steps):
         agent_mask = info["agent_mask"] if "agent_mask" in info.keys() else None
         env_defined_actions = (
             info["env_defined_actions"]
@@ -118,7 +117,6 @@ for ep in trange(episodes):
     # metric logging
     travel_time = env.state()
     episode_travel_times.append(travel_time) # export to csv
-    travel_times_df.loc[len(travel_times_df)] = travel_time[0]
     
     # save the total episode reward
     score = sum(agent_reward.values())
@@ -128,4 +126,9 @@ for ep in trange(episodes):
     epsilon = max(eps_end, epsilon * eps_decay)
     
 print(agent.scores) # export to csv
+
+reward_scores = pd.DataFrame(agent.scores)
+reward_scores.to_csv('models/model_4/reward_scores.csv')
+
+travel_times_df = pd.DataFrame(episode_travel_times)
 travel_times_df.to_csv('models/model_4/episode_travel_times.csv')
