@@ -9,11 +9,11 @@ from aequilibrae.paths import TrafficAssignment
 from aequilibrae.paths.traffic_class import TrafficClass
 #The below code is changing the current working directory to the path mentioned.
 #You can always change this path based on your local setup:
-os.chdir("C:/github/Class-Project/class-project/AequilibraE/New folder")
+os.chdir("C:/github/Class-Project/class-project/AequilibraE")
 
 folder = gettempdir()
 
-dem = pd.read_csv("newNguyenDemandLowDemand.csv")
+dem = pd.read_csv("newNguyenDemandHighDemand.csv")
 zones = int(max(dem.Origin.max(), dem.Destination.max()))
 index = np.arange(zones) + 1
 
@@ -23,14 +23,14 @@ for element in dem.to_records(index=False):
 
 
 #aemfile = os.path.join(folder, "demand.aem")
-aemfile = "C:\github\Class-Project\class-project\AequilibraE\New folder\demand.aem"
+aemfile = "C:\github\Class-Project\class-project\AequilibraE\demand.aem"
 aem = AequilibraeMatrix()
 
 aem.create_empty(file_name=aemfile, zones=zones, matrix_names=['matrix'], memory_only=False)
 aem.matrix['matrix'][:,:] = mtx[:,:]
 aem.index[:] = index[:]
 
-net = pd.read_csv("newNguyenLinksLowDemand.csv", sep=",", lineterminator="\n")
+net = pd.read_csv("newNguyenLinksHighDemand.csv", sep=",", lineterminator="\n")
 
 net.columns = ["newline", "a_node", "b_node", "free flow time", "capacity", "alpha", "beta", "latency"]
 
@@ -74,9 +74,9 @@ assig.execute()
 
 
 results=assig.results()
-results.to_csv("newResults_LowDemand.csv")
+results.to_csv("newResults_HighDemand.csv")
 print(results)
 
 report = assig.report()
-report.to_csv("newReport_LowDemand.csv")
+report.to_csv("newReport_HighDemand.csv")
 print(report)
